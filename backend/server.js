@@ -1,8 +1,7 @@
 const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-
+const cors = express ? require('cors') : null; // Mantém compatibilidade
 const app = express();
+
 app.use(express.json());
 app.use(cors({
     origin: '*',
@@ -10,9 +9,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
 }));
 
-// Puxa das variáveis de ambiente do Render (ou usa fallback se necessário)
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://acnbnvigexcvulfyngn.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_i6BG4_xfle5uIF_qrTjGgw_BkTb_qoW'; 
+// Pega direto das variáveis de ambiente do Render
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+console.log("SUPABASE_URL carregada:", SUPABASE_URL ? "SIM" : "NÃO");
+console.log("SUPABASE_ANON_KEY carregada:", SUPABASE_ANON_KEY ? "SIM" : "NÃO");
 
 // Rota de teste
 app.get('/', (req, res) => {
