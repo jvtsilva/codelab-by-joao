@@ -10,8 +10,9 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
 }));
 
-const SUPABASE_URL = 'https://acnbnvigexcvulfyngn.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_i6BG4_xfle5uIF_qrTjGgw_BkTb_qoW'; 
+// Puxa das variáveis de ambiente do Render (ou usa fallback se necessário)
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://acnbnvigexcvulfyngn.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'sb_publishable_i6BG4_xfle5uIF_qrTjGgw_BkTb_qoW'; 
 
 // Rota de teste
 app.get('/', (req, res) => {
