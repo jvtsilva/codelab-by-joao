@@ -1,7 +1,8 @@
 const express = require('express');
-const cors = express ? require('cors') : null; // Mantém compatibilidade
-const app = express();
+const cors = require('cors');
+require('dotenv').config();
 
+const app = express();
 app.use(express.json());
 app.use(cors({
     origin: '*',
@@ -9,21 +10,22 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
 }));
 
-// Pega direto das variáveis de ambiente do Render
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
-console.log("SUPABASE_URL carregada:", SUPABASE_URL ? "SIM" : "NÃO");
-console.log("SUPABASE_ANON_KEY carregada:", SUPABASE_ANON_KEY ? "SIM" : "NÃO");
-
 // Rota de teste
 app.get('/', (req, res) => {
-    res.json({ mensagem: 'API do CodeLab by João rodando na nuvem com sucesso!' });
+    res.json({ mensagem: 'API do CodeLab rodando com sucesso!' });
 });
 
-// Rota de Cadastro
+// Rota de Cadastro com tratamento de erro detalhado
 app.post('/api/cadastro', async (req, res) => {
     const { email, senha } = req.body;
+    
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        return res.status(500).json({ erro: 'Variáveis do Supabase não configuradas no servidor!' });
+    }
+
     try {
         const respostaSupabase = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
             method: 'POST',
@@ -37,35 +39,10 @@ app.post('/api/cadastro', async (req, res) => {
         const resultado = await respostaSupabase.json();
 
         if (!respostaSupabase.ok) {
-            return res.status(400).json({ erro: resultado.msg || resultado.error_description || 'Erro no cadastro' });
+            return res.status(400).json({ erro: resultado.msg || resultado.error_description || JSON.stringify(resultado) });
         }
 
         res.json({ sucesso: true, usuario: resultado.user });
-    } catch (err) {
-        res.status(500).json({ erro: err.message });
-    }
-});
-
-// Rota de Login
-app.post('/api/login', async (req, res) => {
-    const { email, senha } = req.body;
-    try {
-        const respostaSupabase = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SUPABASE_ANON_KEY
-            },
-            body: JSON.stringify({ email, password: senha })
-        });
-
-        const resultado = await respostaSupabase.json();
-
-        if (!respostaSupabase.ok) {
-            return res.status(400).json({ erro: resultado.error_description || resultado.msg || 'Erro no login' });
-        }
-
-        res.json({ sucesso: true, session: resultado, user: resultado.user });
     } catch (err) {
         res.status(500).json({ erro: err.message });
     }
