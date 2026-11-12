@@ -13,13 +13,13 @@ app.use(cors({
 const SUPABASE_URL = 'https://acnbnvigexcvulfyngn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_i6BG4_xfle5uIF_qrTjGgw_BkTb_qoW';
 
-// Inicializa o cliente oficial do Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 app.get('/', (req, res) => {
-    res.json({ mensagem: 'API CodeLab online com SDK oficial!' });
+    res.json({ mensagem: 'API CodeLab com Auth online!' });
 });
 
+// Rota de Cadastro com Supabase Auth
 app.post('/api/cadastro', async (req, res) => {
     const { email, senha } = req.body;
     
@@ -28,7 +28,7 @@ app.post('/api/cadastro', async (req, res) => {
     }
 
     try {
-        // 1. Cadastro usando o SDK oficial do Supabase Auth
+        // 1. Cadastra no Auth oficial do Supabase
         const { data, error } = await supabase.auth.signUp({
             email: email,
             password: senha
@@ -40,7 +40,7 @@ app.post('/api/cadastro', async (req, res) => {
 
         const userId = data.user?.id;
 
-        // 2. Insere na tabela progresso se o usuário foi criado com sucesso
+        // 2. Insere na tabela 'progresso' vinculando o user_id
         if (userId) {
             await supabase.from('progresso').insert([
                 {
@@ -49,13 +49,38 @@ app.post('/api/cadastro', async (req, res) => {
                     fase_atual: 1,
                     pontos: 0
                 }
-            ]).catch(() => {}); // Ignora se já houver registro
+            ]).catch(() => {}); // Ignora caso já exista registro
         }
 
         return res.json({ sucesso: true, usuario: data.user });
 
     } catch (err) {
         return res.status(500).json({ erro: 'Erro interno no servidor: ' + err.message });
+    }
+});
+
+// Rota de Login com Supabase Auth
+app.post('/api/login', async (req, res) => {
+    const { email, senha } = req.body;
+    
+    if (!email || !senha) {
+        return res.status(400).json({ erro: 'E-mail e senha são obrigatórios.' });
+    }
+
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: senha
+        });
+
+        if (error) {
+            return res.status(400).json({ erro: error.message });
+        }
+
+        return res.json({ sucesso: true, session: data.session, usuario: data.user });
+
+    } catch (err) {
+        return res.status(500).json({ erro: 'Erro interno no login: ' + err.message });
     }
 });
 
